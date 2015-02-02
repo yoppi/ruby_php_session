@@ -108,6 +108,7 @@ class PHPSession
     private
 
     def define_or_find_struct(name, properties)
+      name = name.gsub(/^./) { |c| c.upcase }
       if Struct.const_defined?(name)
         struct = Struct.const_get(name)
         if struct.members.sort != properties.map(&:to_sym).sort

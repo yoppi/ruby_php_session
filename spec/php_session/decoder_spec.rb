@@ -81,6 +81,12 @@ describe PHPSession::Decoder do
         expect(data["key"].k).to eq("v")
       end
     end
+    context "when given object which downcased class name" do
+      it "should return class Struct" do
+        data = PHPSession::Decoder.decode('key|O:4:"nyan":1:{s:1:"k";s:1:"v";}')
+        expect(data["key"].class).to eq(Struct::Nyan)
+      end
+    end
     context "when given a object which has no property" do
       it "should return a hash which has a object" do
         data = PHPSession::Decoder.decode('key|O:4:"Piyo":0:{}')
