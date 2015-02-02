@@ -60,7 +60,7 @@ class PHPSession
     def process_empty_array_value
       array_which_finished  = @array.shift
 
-      klass  = array_which_finished[:klass];
+      klass = array_which_finished[:klass]
       if klass
         struct = define_or_find_struct(klass, [])
         process_value(struct.new)
@@ -79,7 +79,7 @@ class PHPSession
           key_values_array = extract_stack(array_which_finished[:length] * 2)
           key_values = key_values_array.group_by.with_index{|el, i| i%2 == 0 ? :key : :value}
 
-          klass  = array_which_finished[:klass];
+          klass  = array_which_finished[:klass]
           if klass
             struct = define_or_find_struct(klass, key_values[:key])
             process_value(struct.new(*key_values[:value]))
@@ -99,8 +99,8 @@ class PHPSession
           @state = State::VarType
         end
       else
-        varname = @stack.pop;
-        @data[varname] = value;
+        varname = @stack.pop
+        @data[varname] = value
         @state = State::VarName
       end
     end
@@ -161,7 +161,7 @@ class PHPSession
             decoder.process_value(bool)
           when /\AO:(\d+):(.*)\Z/m # object
             decoder.buffer = $2
-            decoder.stack.push($1.to_i);
+            decoder.stack.push($1.to_i)
             decoder.state = ClassName
           when /\A[Rr]:(\d+);(.*)\Z/m # reference count?
             decoder.buffer = $2
@@ -203,14 +203,14 @@ class PHPSession
         def self.parse(decoder)
           raise Errors::ParseError, "invalid array format" unless decoder.buffer =~ /\A}/
             decoder.buffer = decoder.buffer[1..-1]
-          next_state = decoder.in_array ? VarType : VarName;
+          next_state = decoder.in_array ? VarType : VarName
           decoder.state = next_state
         end
       end
 
       class ClassName
         def self.parse(decoder)
-          length = decoder.stack.pop;
+          length = decoder.stack.pop
           length_include_quotes = length + 3
 
           value_include_quotes = decoder.buffer[0, length_include_quotes]
