@@ -105,6 +105,12 @@ class PHPSession
       end
     end
 
+    def process_value_with_klass(klass, properties, values)
+      varname = @stack.pop
+      struct = define_or_find_struct(klass, properties)
+      @data[varname] = struct.new(*values)
+    end
+
     private
 
     def define_or_find_struct(name, properties)
@@ -164,6 +170,10 @@ class PHPSession
             decoder.buffer = $2
             decoder.stack.push($1.to_i)
             decoder.state = ClassName
+          when /\AC:(\d+):(.*)\Z/m # serialized object
+            decoder.buffer = $2
+            decoder.stack.push($1.to_i)
+            decoder.state = SerializedClassName
           when /\A[Rr]:(\d+);(.*)\Z/m # reference count?
             decoder.buffer = $2
             decoder.process_value($1)
@@ -223,6 +233,30 @@ class PHPSession
           decoder.buffer = $2
           decoder.start_array($1.to_i, klass)
           decoder.state = ArrayStart
+        end
+      end
+
+      class SerializedClassName
+        def self.parse(decoder)
+          length = decoder.stack.pop
+          length_include_quotes = length + 3
+
+          value_include_quotes = decoder.buffer[0, length_include_quotes]
+          klass = value_include_quotes.gsub(/\A"/,'').gsub(/":\Z/,'')
+
+          decoder.buffer = decoder.buffer[length_include_quotes..-1]
+
+          raise Errors::ParseError, "invalid class format" unless decoder.buffer =~ /\A(\d+):(.*)/m
+
+          # treat as string
+          buffer = $2
+          length = $1.to_i
+          length_include_quotes = length + 2
+          value_include_quotes = buffer.byteslice(0, length_include_quotes)
+          value = value_include_quotes.gsub(/\A{/,'').gsub(/}\Z/, '')
+
+          decoder.buffer = decoder.buffer.byteslice(length_include_quotes + 3 .. -1)
+          decoder.process_value_with_klass(klass, [:value], [value])
         end
       end
     end

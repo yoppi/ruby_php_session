@@ -93,6 +93,13 @@ describe PHPSession::Decoder do
         expect(data["key"].class).to eq(Struct::Piyo)
       end
     end
+    context "when given serialized class value in session data" do
+      it "should return a hash" do
+        data = PHPSession::Decoder.decode('key|C:5:"klass":14:{a:1:{i:0;i:1;}}')
+        expect(data["key"].class).to eq(Struct::Klass)
+        expect(data["key"].value).to eq("a:1:{i:0;i:1;}")
+      end
+    end
     context "when given objects which have same class" do
       it "should return same class Structs" do
         data = PHPSession::Decoder.decode('key|a:2:{s:1:"1";O:4:"Nyan":1:{s:1:"k";s:1:"v";}s:1:"2";O:4:"Nyan":1:{s:1:"k";s:1:"v";}}')
