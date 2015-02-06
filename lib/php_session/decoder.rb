@@ -105,14 +105,6 @@ class PHPSession
       end
     end
 
-    def process_value_with_klass(klass, properties, values)
-      varname = @stack.pop
-      struct = define_or_find_struct(klass, properties)
-      @data[varname] = struct.new(*values)
-    end
-
-    private
-
     def define_or_find_struct(name, properties)
       name = name.gsub(/^./) { |c| c.upcase }
       if Struct.const_defined?(name)
@@ -255,8 +247,10 @@ class PHPSession
           value_include_quotes = buffer.byteslice(0, length_include_quotes)
           value = value_include_quotes.gsub(/\A{/,'').gsub(/}\Z/, '')
 
-          decoder.buffer = decoder.buffer.byteslice(length_include_quotes + 3 .. -1)
-          decoder.process_value_with_klass(klass, [:value], [value])
+          decoder.buffer = buffer.byteslice(length_include_quotes .. -1)
+
+          struct = decoder.define_or_find_struct(klass, [:value])
+          decoder.process_value(struct.new(value))
         end
       end
     end

@@ -191,6 +191,33 @@ EOS
           }
         })
       end
+      it "should return a complex hash2" do
+        session_data = <<'EOS'
+lastRequest|i:1423191090;authenticated|b:1;credentials|a:3:{i:0;s:8:"japanese";i:1;s:5:"buyer";i:2;s:14:"password_login";}attributes|a:1:{s:10:"attributes";a:8:{s:9:"member_id";i:570;s:4:"slug";s:8:"Z8221183";s:5:"alias";s:0:"";s:14:"password_login";b:1;s:8:"like_box";C:10:"TmpLikeBox":2:{__}s:11:"order_count";i:0;s:12:"member_names";a:2:{s:2:"ja";s:8:"testtest";s:2:"en";N;}s:9:"cart_data";C:4:"Cart":93:{a:2:{i:0;a:1:{i:551;C:10:"CartBasket":42:{a:3:{i:0;i:551;i:1;N;i:2;a:1:{i:921;i:1;}}}}i:1;N;}}}}culture|s:2:"ja";
+EOS
+        expect(PHPSession::Decoder.decode(session_data)).to eq({
+          "lastRequest" => 1423191090,
+          "authenticated" => true,
+          "credentials" => {
+            0 => "japanese",
+            1 => "buyer",
+            2 => "password_login"
+          },
+          "attributes" => {
+            "attributes" => {
+              "member_id" => 570,
+              "slug" => "Z8221183",
+              "alias" => "",
+              "password_login" => true,
+              "like_box" => Struct::TmpLikeBox.new("__"),
+              "order_count" => 0,
+              "member_names" => {"ja" => "testtest", "en" => nil},
+              "cart_data" => Struct::Cart.new('a:2:{i:0;a:1:{i:551;C:10:"CartBasket":42:{a:3:{i:0;i:551;i:1;N;i:2;a:1:{i:921;i:1;}}}}i:1;N;}')
+            }
+          },
+          "culture" => "ja"
+        })
+      end
       context 'when given nil' do
         it "should return {}" do
           expect(PHPSession::Decoder.decode(nil)).to eq({})
